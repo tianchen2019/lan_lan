@@ -1,4 +1,6 @@
+#### step1: not move batch effect
 load("/fshare2/Rotation/tianchen/sc_rna/hong_data/new/origin-RSEM-tRDS.rdata")
+rownames(y)<-sub("EF","DQ",rownames(y))
 noGMP<-y[,setdiff(c(1:ncol(y)),grep("GMP",colnames(y)))]
 origin_data<-as.matrix(noGMP)
 rownames(origin_data)<-sub("_","-",rownames(origin_data))
@@ -41,10 +43,6 @@ clu1 <- ScoreJackStraw(clu1, dims = 1:20)
 
 clu1 <- FindNeighbors(clu1, dims = 1:20)
 clu1 <- FindClusters(clu1, resolution = 1)
-
-clu1 <- RunTSNE(clu1, dims.use = 1:10, perplexity = 20)
-clu_origin_weiBatch<-clu_zong
-??TSENPlot()
 clu1 <- RunTSNE(clu1, dims.use = 1:10, perplexity = 30)
 TSNEPlot(object = clu1,pt.size = 1.5)
 
@@ -52,3 +50,10 @@ TSNEPlot(object = clu1,pt.size = 1.5,group.by="orig.ident",
          cols = c("#ff6c5f","#ff6c5f","#ff6c5f","#ff0092","#ff0092","#0099cc","#0099cc",
                   "#0099cc","#0099cc","#05cc47","#05cc47","orange","orange","#7d3f98","#7d3f98","#7d3f98",
                   "#3be8b0","#3be8b0"))
+
+####move HOXB5_low_quailty(P1,P4) ###need to look at tsne_fig to change the code
+hoxb5_tsne<-as.data.frame(clu1@reductions$tsne@cell.embeddings)[colnames(clu1@assays$RNA)[grep("HOXB",colnames(clu1@assays$RNA))],1:2]
+hoxb_qu<-rownames(hoxb5_tsne)[(hoxb5_tsne[,1]>6 & hoxb5_pca[,2]>21)]
+rownames(origin_data2)<-sub("_","-",rownames(origin_data2))
+data_quhoxb<- origin_data2[rownames(clu1@assays$RNA@counts),setdiff(colnames(clu1@assays$RNA@counts),hoxb_qu)]
+####83513  5340
