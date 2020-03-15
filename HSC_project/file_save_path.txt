@@ -4,3 +4,5 @@ load("/fshare2/Rotation/tianchen/young_hoxb5_cell/result/young_aged_hoxb5_cluste
 load("/fshare2/Rotation/tianchen/sc_rna/hong_data/new/origin-RSEM-tRDS.rdata")
 #### aged_hoxb5_cell
 load("/fshare2/Rotation/tianchen/sc_rna/hong_data/new/aged_hoxb5.rdata")
+### aged hoxb5 cells' score
+/fshare2/Rotation/tianchen/score_all_cell/aged_hoxb5_cell_score
