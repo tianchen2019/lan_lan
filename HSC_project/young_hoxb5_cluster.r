@@ -26,36 +26,36 @@ panduan<-grepl("^DQ",rownames(origin_data))
 panduan<-!panduan
 row_new<-rownames(origin_data)[panduan]
 origin_data2<-origin_data[row_new,]
+save(origin_data2,file="old_data_noGMP_no_ercc.rdata")
 
-### 找出mcherry pos/neg 细胞的差异基因
+####### 找出mcherry pos/neg 细胞的差异基因
 hsc<-origin_data2
-hsc_hoxb_cell<-colnames(hsc)[grep("^HOXB",colnames(hsc))]
-hoxb_matrix<-hsc[,intersect(c(rownames(pos_cell),rownames(neg_cell)),hsc_hoxb_cell)]
+hoxb_matrix<-hsc[,intersect(c(rownames(pos_cell),rownames(neg_cell)),colnames(hsc))]
 
-hsc_hoxb_cell_mt<-hsc[,grep("^HOXB",colnames(hsc))]
-hsc_hoxb_cell_mt_noP2<-hsc_hoxb_cell_mt[,-c(grep("HOXB5.P2",colnames(hsc_hoxb_cell_mt)))]
-hoxb_matrix_no_P2<-hsc[,intersect(c(rownames(pos_cell),rownames(neg_cell)),colnames(hsc_hoxb_cell_mt_noP2))]
+# 去除P2的HOXb.P2细胞进行差异分析。
+hsc_matrix_no_P2<-hoxb_matrix[,-c(grep("HOXB5.P2",colnames(hsc_hoxb_cell_mt)))]
+hsc_matrix_no_P2<-hsc_matrix_no_P2[,intersect(c(rownames(pos_cell),rownames(neg_cell)),colnames(hsc_matrix_no_P2))]
 
-intersect(rownames(pos_cell),colnames(dplyr::select(as.data.frame(hsc_hoxb_cell_mt),contains("HOXB5.P2"))))
 
-#### 新的数据
-load("/fshare2/Rotation/tianchen/young_hoxb5_cell/new_data/newhoxbdata.obj")
+
 
 ########### 以下是data后的操作
 #### filter:
+#### choose data
+test_data<-hsc_matrix_no_P2
 filter_hoxb <- apply(
-  hoxb_matrix_no_P2,
+  test_data,
   1,
   function(x) length(x[x > 0]) >= 2
 )
 
-hoxb_filter <- hoxb_matrix_no_P2[filter_hoxb,]
+hoxb_filter <- test_data[filter_hoxb,]
 ####  hong's way:wilcox
 ####
 myFun <- function(x){
   x = as.numeric(x)
-  v1 = x[1:(length(intersect(pos_cell$X,colnames(hoxb_filter))))]
-  v2 = x[(length(intersect(pos_cell$X,colnames(hoxb_filter)))+1):(dim(hoxb_filter)[2])]
+  v1 = x[1:(length(intersect(rownames(pos_cell),colnames(hoxb_filter))))]
+  v2 = x[(length(intersect(rownames(pos_cell),colnames(hoxb_filter)))+1):(dim(hoxb_filter)[2])]
   out <- wilcox.test(v1,v2)
   out <- out$p.value
 }
@@ -69,20 +69,22 @@ avggroup3 <- data.frame("avggroup3"=apply(hoxb_filter[,(length(intersect(pos_cel
 log2fc <-  data.frame("log2fc"=log2((avggroup12$avggroup12)/(avggroup3$avggroup3)))
 results1 <- cbind(avggroup12,avggroup3,log2fc,p_value,FDR)
 rownames(results1)<-rownames(hoxb_filter)
+#### 储存文件
 write.table(results1,file = "qu_P2_hoxb_young_pos_neg.tsv",row.names = T, sep="\t", quote=F)
-###sig_gene
+###sig_gene :转录本
 sig_gene<-rownames(results1)[results1$p_value<0.05]
+### 选择的是基因
 sig_gene2<-unique(sub("^ENS.*_+(.*)-.*$","\\1",sig_gene))
 
 #### young_hoxb5_cell use pos_vs_different_gene to plot pca
 #####修改数据
-zong_hoxb_matrix<-hsc[,hsc_hoxb_cell]
-
+zong_hoxb_matrix<-hsc[,grep("^HOXB5.*",colnames(hsc))]
 #### 新数据
 zong_hoxb_matrix<-as.matrix(newhoxb@raw.data)
 
-
-clu_hoxb<-CreateSeuratObject(counts = zong_hoxb_matrix, project = "all_cell_cluster", min.cells = 5, min.features = 500)
+####选择输入数据
+seurat_matrix<-zong_hoxb_matrix
+clu_hoxb<-CreateSeuratObject(counts = seurat_matrix, project = "all_cell_cluster", min.cells = 5, min.features = 500)
 clu_hoxb[["percent.mt"]] <- PercentageFeatureSet(clu_hoxb, pattern = "-mt-")
 VlnPlot(clu_hoxb, features = c("percent.mt"))
 VlnPlot(clu_hoxb, features = c("nFeature_RNA"))
@@ -116,14 +118,9 @@ clu1 <- RunTSNE(clu1, dims.use = 1:10, perplexity = 10)
 
 #clu1 <- RunTSNE(clu1, dims.use = 1:10, perplexity = 30)
 TSNEPlot(object = clu1,pt.size = 1.5)
-
 TSNEPlot(object = clu1,pt.size = 1.5,group.by="orig.ident")
 
-
-
-
-
-#### use sig gene
+#### use sig gene to cluster
 clu2 <- RunPCA(clu1, features =sig_gene2)
 #select_feature<- VariableFeatures(object = clu1)
 DimPlot(clu2, reduction = "pca",pt.size = 1.5)
@@ -135,20 +132,54 @@ clu2 <- ScoreJackStraw(clu2, dims = 1:20)
 
 clu2 <- FindNeighbors(clu2, dims = 1:20)
 clu2 <- FindClusters(clu2, resolution = 1)
-
 clu2 <- RunTSNE(clu2, dims.use = 1:10, perplexity = 10)
+#### RUN UMAP
+clu2<-RunUMAP(clu2,features = sig_gene2)
+DimPlot(clu2, reduction = "umap",pt.size = 1.5,group.by = "orig.ident")
 
 #clu1 <- RunTSNE(clu1, dims.use = 1:10, perplexity = 30)
-TSNEPlot(object = clu2,pt.size = 1.5)
-
-TSNEPlot(object = clu2,pt.size = 1.5,group.by="orig.ident")
-#### 分cluster
-
-clu3 <- FindClusters(clu2, resolution = 0.3)
+#TSNEPlot(object = clu2,pt.size = 1.5)
+TSNEPlot(object = clu2,pt.size = 1.5,group.by="orig.ident",group.by = "orig.ident")
+#### 改变分辨率分cluster
+clu3 <- FindClusters(clu3, resolution = 0.3)
 clu3 <- RunTSNE(clu3, dims.use = 1:10, perplexity = 10)
 TSNEPlot(object = clu3,pt.size = 1.5)
-clu3<-RunUMAP(clu2,features = sig_gene2)
-DimPlot(clu_qubatch_hoxb_sig_2, reduction = "tsne",pt.size = 1.5)
+
+#### find batch effect: move batch effect
+CreateSeuratObject(counts = ryo_data,project = "ryo", min.cells = 0, min.features =0)
+data1<-CreateSeuratObject(counts=newhoxb@raw.data[,c(grep("^Hoxb5P1.HOXB5.P1",colnames(newhoxb@raw.data)),
+                                                     grep("^Hoxb5p2.H5P2",colnames(newhoxb@raw.data)),
+                                                     grep("^Hoxb5P4.HOXB5.P4",colnames(newhoxb@raw.data)))],
+                          project = "P1", min.cells = 0, min.features =0)
+data3<-CreateSeuratObject(counts=newhoxb@raw.data[,grep("^Hoxb5P3.HOXB5.P3",colnames(newhoxb@raw.data))],
+                          project = "P3", min.cells = 0, min.features =0)
+
+two_data.list<-list("P1_P3_P4"=data1,"P3"=data3)
+for (i in 1:length(two_data.list)) {
+  two_data.list[[i]] <- NormalizeData(two_data.list[[i]], verbose = FALSE)
+  two_data.list[[i]] <- FindVariableFeatures(two_data.list[[i]], selection.method = "vst", nfeatures = 3000, verbose = FALSE)
+}
+
+reference.list <- two_data.list
+two_data.anchors <- FindIntegrationAnchors(object.list = reference.list, dims = 1:30, anchor.features = 3000)
+two_data.integrated <- IntegrateData(anchorset = two_data.anchors, dims = 1:30,features.to.integrate=rownames(data1@assays$RNA))
+
+DefaultAssay(two_data.integrated) <- "integrated"
+# Run the standard workflow for visualization and clustering
+two_data.integrated <- ScaleData(two_data.integrated, verbose = FALSE)
+two_data.integrated <- RunPCA(two_data.integrated, npcs = 30, verbose = FALSE)
+DimPlot(two_data.integrated, reduction = "pca", group.by = "tech")
+DimPlot(two_data.integrated, reduction = "pca",group.by = "orig.ident")
+two_data.integrated <- JackStraw(two_data.integrated, num.replicate = 100)
+two_data.integrated <- ScoreJackStraw(two_data.integrated, dims = 1:20)
+
+two_data.integrated <- FindNeighbors(two_data.integrated, dims = 1:20)
+two_data.integrated<- FindClusters(two_data.integrated, resolution = 0.3)
+two_data.integrated <- RunTSNE(two_data.integrated, dims.use = 1:10, perplexity = 10)
+TSNEPlot(object = two_data.integrated,pt.size = 1.5, group.by = "orig.ident")
+
+# two_data.integrated<-RunUMAP(two_data.integrated,npcs = 30, verbose = FALSE)
+# DimPlot(two_data.integrated, reduction = "umap",pt.size = 1.5,group.by="orig.ident")
 
 
 ###plot pos neg
