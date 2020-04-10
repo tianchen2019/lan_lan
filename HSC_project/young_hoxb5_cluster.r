@@ -36,9 +36,6 @@ hoxb_matrix<-hsc[,intersect(c(rownames(pos_cell),rownames(neg_cell)),colnames(hs
 hsc_matrix_no_P2<-hoxb_matrix[,-c(grep("HOXB5.P2",colnames(hsc_hoxb_cell_mt)))]
 hsc_matrix_no_P2<-hsc_matrix_no_P2[,intersect(c(rownames(pos_cell),rownames(neg_cell)),colnames(hsc_matrix_no_P2))]
 
-
-
-
 ########### 以下是data后的操作
 #### filter:
 #### choose data
@@ -146,7 +143,6 @@ clu3 <- RunTSNE(clu3, dims.use = 1:10, perplexity = 10)
 TSNEPlot(object = clu3,pt.size = 1.5)
 
 #### find batch effect: move batch effect
-CreateSeuratObject(counts = ryo_data,project = "ryo", min.cells = 0, min.features =0)
 data1<-CreateSeuratObject(counts=newhoxb@raw.data[,c(grep("^Hoxb5P1.HOXB5.P1",colnames(newhoxb@raw.data)),
                                                      grep("^Hoxb5p2.H5P2",colnames(newhoxb@raw.data)),
                                                      grep("^Hoxb5P4.HOXB5.P4",colnames(newhoxb@raw.data)))],
@@ -177,6 +173,8 @@ two_data.integrated <- FindNeighbors(two_data.integrated, dims = 1:20)
 two_data.integrated<- FindClusters(two_data.integrated, resolution = 0.3)
 two_data.integrated <- RunTSNE(two_data.integrated, dims.use = 1:10, perplexity = 10)
 TSNEPlot(object = two_data.integrated,pt.size = 1.5, group.by = "orig.ident")
+two_data.integrated<-RunUMAP(two_data.integrated,npcs = 30, verbose = FALSE)
+DimPlot(two_data.integrated, reduction = "umap",pt.size = 1.5,group.by="orig.ident")
 
 # two_data.integrated<-RunUMAP(two_data.integrated,npcs = 30, verbose = FALSE)
 # DimPlot(two_data.integrated, reduction = "umap",pt.size = 1.5,group.by="orig.ident")
@@ -305,6 +303,7 @@ as.matrix(clu2@assays$RNA)[hoxb_gene[1],expree_hoxb_cell]
 
 
 
+
 #####去过批次的去做
 load("~/tianchen/sc_rna/hong_data/new/youngcellsubtype.Robj")
 young3 = UpdateSeuratObject(object = young2)
@@ -340,9 +339,6 @@ clu_qubatch_hoxb <- RunTSNE(clu_qubatch_hoxb, dims.use = 1:10, perplexity = 10)
 TSNEPlot(object = clu_qubatch_hoxb,pt.size = 1.5)
 
 TSNEPlot(object = clu_qubatch_hoxb,pt.size = 1.5,group.by="orig.ident")
-
-
-
 
 
 clu_qubatch_hoxb_sig<-clu_qubatch_hoxb
