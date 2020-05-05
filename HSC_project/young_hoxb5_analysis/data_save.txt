@@ -1,0 +1,19 @@
+#### new hoxb5 cells data
+hoxb5_filter<-newhscfil@raw.data[,grep("Hoxb5",colnames(newhscfil@raw.data))]
+colnames(hoxb5_filter)<-sub("Hoxb5p2.H5P2","HOXB5-P2",colnames(hoxb5_filter))
+colnames(hoxb5_filter)<-sub("Hoxb5p4.HOXB5.P2","HOXB5-P4",colnames(hoxb5_filter))
+colnames(hoxb5_filter)<-sub("Hoxb5P3.HOXB5.P3", "HOXB5-P3",colnames(hoxb5_filter))  
+colnames(hoxb5_filter)<-sub("Hoxb5P1.HOXB5.P1", "HOXB5-P1",colnames(hoxb5_filter))
+colnames(hoxb5_filter)<-sub("_","-",colnames(hoxb5_filter))                   
+colnames(hoxb5_filter)<-sub("_","-",colnames(hoxb5_filter))                   
+colnames(hoxb5_filter)<-sub("\\.","-",colnames(hoxb5_filter))
+length(setdiff(colnames(hoxb5_filter),sort_info$X))
+save(hoxb5_filter,file="/fshare2/Rotation/tianchen/young_hoxb5_cell/new_data/hoxb5_filter_new.rdata")
+
+### sorting info 
+sort_info<-read.csv(file="/fshare2/Rotation/tianchen/young_hoxb5_cell/Rahul_Hoxb5_sortinginfo.csv",header = T,sep=",")
+sort_info$X<-sub("H5P2","HOXB5-P2",sort_info$X)
+sort_info$X<-sub("_","-",sort_info$X)
+save(sort_info,file="/fshare2/Rotation/tianchen/young_hoxb5_cell/new_data/young_hoxb5_sort_info.rdata")
+P8_cell<-sort_info$X[sort_info$P8==1]
+P7_cell<-sort_info$X[sort_info$P9==1]
