@@ -58,19 +58,19 @@ FDR1 <- p.adjust(p_value1,method = "fdr")
 avgdata1 <- data.frame("avgdata1"=apply(data_analysis[,1:dim(data1)[2]],1,mean))
 avgdata2 <- data.frame("avgdata2"=apply(data_analysis[,(dim(data1)[2]+1):(dim(data1)[2]+dim(data2)[2])],1,mean))
 avgdata3 <- data.frame("avgdata3"=apply(data_analysis[,(dim(data1)[2]+dim(data2)[2]+1):(dim(data_analysis)[2])],1,mean))
-log2fc1 <-  data.frame("log2fc1"=log2((avgdata1$avgdata1)/(avgdata2$avgdata2)))
+log2fc1 <-  data.frame("log2fc1"=log2((avgdata1$avgdata1+1)/(avgdata2$avgdata2+1)))
 
 p_value2 <- apply(data_analysis,1,myFun2)
 p_value2[is.nan(p_value2)] <- 1
 FDR2 <- p.adjust(p_value2,method = "fdr")
 ###method=FDR
-log2fc2 <-  data.frame("log2fc2"=log2((avgdata1$avgdata1)/(avgdata3$avgdata3)))
+log2fc2 <-  data.frame("log2fc2"=log2((avgdata1$avgdata1+1)/(avgdata3$avgdata3+1)))
 
 p_value3 <- apply(data_analysis,1,myFun3)
 p_value3[is.nan(p_value3)] <- 1
 FDR3 <- p.adjust(p_value3,method = "fdr")
 ###method=FDR
-log2fc3 <-  data.frame("log2fc3"=log2((avgdata2$avgdata2)/(avgdata3$avgdata3)))
+log2fc3 <-  data.frame("log2fc3"=log2((avgdata2$avgdata2+1)/(avgdata3$avgdata3+1)))
 
 results <- cbind(avgdata1,avgdata2,avgdata2,log2fc1,p_value1,FDR1,log2fc2,p_value2,FDR2,log2fc3,p_value3,FDR3)
 rownames(results)<-rownames(data_analysis)
@@ -106,7 +106,7 @@ p_value4[is.nan(p_value4)] <- 1
 FDR4 <- p.adjust(p_value4,method = "fdr")
 avgdata1_2 <- data.frame("avgdata1_2"=apply(data_analysis[,1:(dim(data1)[2]+dim(data2)[2])],1,mean))
 avgdata3 <- data.frame("avgdata3"=apply(data_analysis[,(dim(data1)[2]+dim(data2)[2]+1):(dim(data_analysis)[2])],1,mean))
-log2fc4 <-  data.frame("log2fc"=log2((avgdata1_2$avgdata1_2)/(avgdata3$avgdata3)))
+log2fc4 <-  data.frame("log2fc"=log2((avgdata1_2$avgdata1_2+1)/(avgdata3$avgdata3+1)))
 results2<-cbind(avgdata1_2,avgdata3,log2fc4,p_value4,FDR4)
 rownames(results2)<-rownames(data_analysis)
 data1_2_sig_gene<-rownames(results2)[p_value4<0.05 & log2fc4>0]
