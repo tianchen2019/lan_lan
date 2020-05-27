@@ -8,3 +8,27 @@ load("/fshare2/Rotation/tianchen/sc_rna/hong_data/new/aged_hoxb5.rdata")
 /fshare2/Rotation/tianchen/score_all_cell/aged_hoxb5_cell_score
 ### cell markers
 /fshare2/Rotation/tianchen/new_scRNA/data/GEXC-SurfaceProteinAtlas.csv
+
+
+
+#### change data
+### no1. raw data, move batch data
+#### 7180 cells' raw data ,move batch data, tsne,pca,umap
+/fshare2/Rotation/tianchen/young_hoxb5_cell/result/hsc_7180_integrate.rdata
+#### 7254 cells' raw data ,move batch data, tsne,pca,umap
+/fshare2/Rotation/tianchen/young_hoxb5_cell/result/hsc_7254_integrate.rdata
+
+
+
+
+### no.2 gene list
+
+
+
+
+
+### no.3 score value 
+
+
+
+
